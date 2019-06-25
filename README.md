@@ -1,2 +1,2 @@
 # AmazonEchoAlexaDotnet
-Amazon Echo Alex.NET
+Amazon Echo Alexa.NET

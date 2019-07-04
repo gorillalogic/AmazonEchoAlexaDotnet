@@ -53,6 +53,10 @@ namespace AlexaFunctionDemo
 
                 }
             }
+            else
+            {
+                response = ResponseBuilder.Empty();
+            }
 
             return new OkObjectResult(response);
         }

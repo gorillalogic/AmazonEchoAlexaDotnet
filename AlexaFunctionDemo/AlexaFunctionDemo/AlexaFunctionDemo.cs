@@ -12,6 +12,7 @@ using Alexa.NET.Request;
 using Alexa.NET.Request.Type;
 using Alexa.NET;
 using Alexa.NET.Response.Directive;
+using System.Collections.Generic;
 
 namespace AlexaFunctionDemo
 {
@@ -24,8 +25,8 @@ namespace AlexaFunctionDemo
         {
             string json = await req.ReadAsStringAsync();
             var skillRequest = JsonConvert.DeserializeObject<SkillRequest>(json);
-
             var requestType = skillRequest.GetRequestType();
+            Session session = skillRequest.Session;
 
             SkillResponse response = null;
 
@@ -40,16 +41,56 @@ namespace AlexaFunctionDemo
 
                 if (intentRequest.Intent.Name.ToLower() == "gorillalocation")
                 {
-                    response = ResponseBuilder.Tell("Gorilla Logic is located in Medellin RutaN building");
+                    response = ResponseBuilder.Tell("Gorilla Logic is located in Ruta N medellin Colombia oficina 2020");
+                    var speech = new SsmlOutputSpeech();
+                    speech.Ssml = "<speak>Gorilla Logic is located in <lang xml:lang=\"es-ES\">Ruta Ene Medellin Colombia oficina 2020</lang></speak>";
+                    //response = ResponseBuilder.Tell(speech);
                     response.Response.ShouldEndSession = false;
                 }
-
-                if (intentRequest.Intent.Name.ToLower() == "gorillamusic")
+                else if (intentRequest.Intent.Name.ToLower() == "gorillamusic" || intentRequest.Intent.Name == "AMAZON.ResumeIntent")
                 {
-                    string audioUrl = "https://files.fm/down.php?cf&i=n523dd2d&n=Gorillaz+-+19-2000+lyrics.mp3";
+                    string audioUrl = "https://audiodemosmp3.s3.amazonaws.com/Gorillaz_-_19-2000_lyrics.mp3";
                     string audioToken = "Gorillaz song 19 - 20000";
-                    response = ResponseBuilder.AudioPlayerPlay(PlayBehavior.ReplaceAll, audioUrl, audioToken);
+                    var speech = new SsmlOutputSpeech();
+                    speech.Ssml = $"<speak>{audioToken}<audio src=\"{audioUrl}\"/></speak>";
+                    //response = ResponseBuilder.Tell(speech);
+                    response = ResponseBuilder.AudioPlayerPlay(PlayBehavior.ReplaceAll, audioUrl, audioToken, (int)skillRequest.Context.AudioPlayer.OffsetInMilliseconds);
+                    response.Response.ShouldEndSession = false;
+
+                }
+                else if (intentRequest.Intent.Name.ToLower() == "gorillainvitation")
+                {
+                    var speech = new SsmlOutputSpeech();
+                    speech.Ssml = "<speak><lang xml:lang=\"es-ES\"><voice name=\"Enrique\">Estan todos invitados al meetup del 25 de julio donde yo alexa seré la protagonista. Los esperamos en Ruta N</voice></lang></speak>";
+                    response = ResponseBuilder.Tell(speech);
                     response.Response.ShouldEndSession = true;
+                }
+                else if (intentRequest.Intent.Name == "AMAZON.PauseIntent")
+                {
+                    response = ResponseBuilder.AudioPlayerStop();
+                    response.Response.ShouldEndSession = false;
+                }
+            }
+            else if (requestType == typeof(SessionEndedRequest))
+            {
+                response = ResponseBuilder.Tell("bye");
+                response.Response.ShouldEndSession = false;
+            }
+            else if (requestType == typeof(AudioPlayerRequest))
+            {
+                // do some audio response stuff
+                var audioRequest = skillRequest.Request as AudioPlayerRequest;
+
+                //
+                if (audioRequest.AudioRequestType == AudioRequestType.PlaybackStopped)
+                {
+
+
+                }
+
+                //
+                if (audioRequest.AudioRequestType == AudioRequestType.PlaybackNearlyFinished)
+                {
 
                 }
             }
@@ -60,55 +101,6 @@ namespace AlexaFunctionDemo
 
             return new OkObjectResult(response);
         }
-
-        /// <summary>
-        /// Validates the request.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <param name="skillRequest">The skill request.</param>
-        /// <returns></returns>
-        private static async Task<bool> ValidateRequest(HttpRequest request, SkillRequest skillRequest)
-        {
-            request.Headers.TryGetValue("SignatureCertChainUrl", out var signatureChainUrl);
-            if (string.IsNullOrWhiteSpace(signatureChainUrl))
-            {
-                return false;
-            }
-
-            Uri certUrl;
-            try
-            {
-                certUrl = new Uri(signatureChainUrl);
-            }
-            catch
-            {
-                return false;
-            }
-
-            request.Headers.TryGetValue("Signature", out var signature);
-            if (string.IsNullOrWhiteSpace(signature))
-            {
-                return false;
-            }
-
-            request.Body.Position = 0;
-            var body = await request.ReadAsStringAsync();
-            request.Body.Position = 0;
-
-            if (string.IsNullOrWhiteSpace(body))
-            {
-                return false;
-            }
-
-            bool valid = await RequestVerification.Verify(signature, certUrl, body);
-            bool isTimestampValid = RequestVerification.RequestTimestampWithinTolerance(skillRequest);
-
-            if (!isTimestampValid)
-            {
-                valid = false;
-            }
-
-            return valid;
-        }
+        
     }
 }

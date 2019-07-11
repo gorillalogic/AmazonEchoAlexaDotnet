@@ -65,6 +65,36 @@ namespace AlexaFunctionDemo
                     response = ResponseBuilder.Tell(speech);
                     response.Response.ShouldEndSession = true;
                 }
+                else if (intentRequest.Intent.Name.ToLower() == "gorillacalculation")
+                {
+                    Reprompt reprompt = new Reprompt("you said {year}");
+                    if (intentRequest.Intent.Slots.Count > 0)
+                    {
+                        if (intentRequest.Intent.Slots["year"] != null &&
+                            intentRequest.Intent.Slots["year"].Value!=null &&
+                            intentRequest.Intent.Slots["date"] != null &&
+                            intentRequest.Intent.Slots["date"].Value != null)
+                        {
+                            DateTime dateValue = DateTime.Parse(intentRequest.Intent.Slots["date"].Value.ToString());
+
+                            dateValue.AddYears(int.Parse(intentRequest.Intent.Slots["year"].Value.ToString()));
+
+                            int result = (DateTime.Now - dateValue).Days/365;
+
+                            response = ResponseBuilder.Tell($"you are {result} years old");
+                            response.Response.ShouldEndSession = true;
+
+                        }
+                        else
+                        {
+                            response = ResponseBuilder.Ask("Please tell me, when were you born?", reprompt);
+                        }
+                    }
+                    else
+                    {
+                        response = ResponseBuilder.Ask("Please tell me, when were you born?", reprompt);
+                    }
+                }
                 else if (intentRequest.Intent.Name == "AMAZON.PauseIntent")
                 {
                     response = ResponseBuilder.AudioPlayerStop();

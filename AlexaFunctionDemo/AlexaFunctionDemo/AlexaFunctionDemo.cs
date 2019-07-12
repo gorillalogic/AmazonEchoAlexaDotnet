@@ -50,7 +50,7 @@ namespace AlexaFunctionDemo
                         break;
                     case "gorillamusic":
                     case "amazon.resumeintent":
-                        string audioUrl = "https://audiodemosmp3.s3.amazonaws.com/Gorillaz_-_19-2000_lyrics.mp3";
+                        string audioUrl = "{url}";
                         string audioToken = "Gorillaz song 19 - 20000";
                         var speechMusic = new SsmlOutputSpeech();
                         //speech.Ssml = $"<speak>{audioToken}<audio src=\"{audioUrl}\"/></speak>";
